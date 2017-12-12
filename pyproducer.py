@@ -15,11 +15,12 @@ def delivery_callback(err, msg):
 
 def main(cmd="NOOP",
          pattern=".*",
-         reportTo="https://kafka.innobubble.com",
-         token="ENV_VAR",
-         topic="GENERAL"):
-    p = Producer({'bootstrap.servers': 'localhost:29092', 'sasl.mechanisms': 'PLAIN', 'security.protocol': 'SASL_PLAINTEXT',
-                  'sasl.username': 'cherie', 'sasl.password' : 'cherie-secret'})
+         reportTo="localhost:29092",
+         topic="GENERAL",
+         username="cherie",
+         password="cherie-secret"):
+    p = Producer({'bootstrap.servers': reportTo, 'sasl.mechanisms': 'PLAIN', 'security.protocol': 'SASL_PLAINTEXT',
+                  'sasl.username': username, 'sasl.password' : password})
     #run a child process and read all its output
     #p = Producer({'bootstrap.servers': 'localhost:29092'})
     cli = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
@@ -36,7 +37,7 @@ def main(cmd="NOOP",
             #now that we have our captured dictionary, lets pass it to kafka
             try:
                 #the message payload can be string or bytes. Could just give str(capture)
-                p.produce('general', json.dumps(capture), callback=delivery_callback)
+                p.produce(topic, json.dumps(capture), callback=delivery_callback)
             except BufferError as e:
                 sys.stderr.write("Local producer queue is full, try again")
             p.poll(0)
