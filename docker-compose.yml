@@ -1,0 +1,49 @@
+---
+version: '2'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    network_mode: host
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 32181
+      ZOOKEEPER_TICK_TIME: 2000
+      KAFKA_OPTS: 
+        -Djava.security.auth.login.config=/etc/zookeeper/zookeeper_jaas.conf 
+        -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+
+
+    extra_hosts:
+      - "moby:127.0.0.1"
+     # - "localhost: 127.0.0.1"
+    volumes:
+      - /home/cherie/projects/cp-docker-images/examples/kafka-single-node/zookeeper_jaas.conf:/etc/zookeeper/zookeeper_jaas.conf
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    network_mode: host
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: localhost:32181
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_LISTENERS: SASL_PLAINTEXT://localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://localhost:29092
+      KAFKA_SOCKET_RECEIVE_BUFFER_BYTES: 102400 #100KB
+      KAFKA_SOCKET_REQUEST_MAX_BYTES: 104857600 #
+      KAFKA_SOCKET_SEND_BUFFER_BYTES: 102400
+     #for authorization/ permissions
+     # KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+     # KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: 'true'
+     # KAFKA_SUPER_USERS: 'User:admin'
+     
+     
+      KAFKA_OPTS:
+        -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
+    extra_hosts:
+      - "moby:127.0.0.1"
+    volumes:
+      - /home/cherie/projects/cp-docker-images/examples/kafka-single-node/kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
